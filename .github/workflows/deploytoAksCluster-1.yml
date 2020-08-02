@@ -1,0 +1,50 @@
+on: [push]
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    
+    - uses: azure/docker-login@v1
+      with:
+        login-server: ticketingacr.azurecr.io
+        username: ${{ secrets.acr_ticketingacr_username }}
+        password: ${{ secrets.acr_ticketingacr_password }}
+    
+    - name: Build and push image to ACR
+      id: build-image
+      run: |
+        docker build "$GITHUB_WORKSPACE/client" -f  "client/Dockerfile" -t ticketingacr.azurecr.io/ticketing:${{ github.sha }}
+        docker push ticketingacr.azurecr.io/ticketing:${{ github.sha }}
+    
+    - uses: azure/k8s-set-context@v1
+      with:
+         kubeconfig: ${{ secrets.aks_ticketing_kubeConfig }}
+      id: login
+    
+    - name: Create namespace
+      run: |
+        namespacePresent=`kubectl get namespace | grep ticketinga971 | wc -l`
+        if [ $namespacePresent -eq 0 ]
+        then
+            echo `kubectl create namespace ticketinga971`
+        fi
+
+    - uses: azure/k8s-create-secret@v1
+      with:
+        namespace: ticketinga971
+        container-registry-url: ticketingacr.azurecr.io
+        container-registry-username: ${{ secrets.acr_ticketingacr_username }}
+        container-registry-password: ${{ secrets.acr_ticketingacr_password }}
+        secret-name: ticketingdockerauth
+       
+    - uses: azure/k8s-deploy@v1
+      with:
+        namespace: ticketinga971
+        manifests: |
+          manifests/deployment-1.yml
+          manifests/service-1.yml
+        images: |
+          ticketingacr.azurecr.io/ticketing:${{ github.sha }}
+        imagepullsecrets: |
+          ticketingdockerauth
