@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+    name: "ticketing-07a3"
+    labels:
+        app: "ticketing-07a3"
+spec:
+    type: LoadBalancer
+    ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+      name: http
+    selector:
+        app: "ticketing-07a3"
