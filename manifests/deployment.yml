@@ -1,0 +1,16 @@
+apiVersion : apps/v1beta1
+kind: Deployment
+metadata:
+  name: "ticketing-2d4d"
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: "ticketing-2d4d"
+    spec:
+      containers:
+        - name: "ticketing-2d4d"
+          image: "ticketingacr.azurecr.io/ticketing"
+          ports:
+          - containerPort: 80
