@@ -1,0 +1,16 @@
+apiVersion : apps/v1beta1
+kind: Deployment
+metadata:
+  name: "ticketing-07a3"
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: "ticketing-07a3"
+    spec:
+      containers:
+        - name: "ticketing-07a3"
+          image: "ticketingacr.azurecr.io/ticketing"
+          ports:
+          - containerPort: 80
